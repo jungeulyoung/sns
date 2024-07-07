@@ -1,14 +1,12 @@
 spring.jpa:
   database: postgresql
   hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
-  hibernate:
-    ddl-auto: update
-
-  properties.hibernate.hibernate.format_sql: true
+  hibernate.ddl-auto: update
+  properties.hibernate.format_sql: true
   show_sql: true
 
 spring.datasource:
-  hikari.maxium-pool-size: 4
+  hikari.maximum-pool-size: 4
   url: jdbc:postgresql://cd5gks8n4kb20g.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com/devd9g33ssva5k
   username: udjuvvgaatc2r0
   password: p5545dc08fcf3995094eb973857316792107578bb394ea676ad47aa591951589f
@@ -17,6 +15,5 @@ spring.datasource:
 
 jwt:
   secret-key: fast_campus.sns-application-2022.secret_key
-  #  30 days
   token.expired-time-ms: 2592000000
 
