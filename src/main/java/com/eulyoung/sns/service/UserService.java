@@ -6,6 +6,7 @@ import com.eulyoung.sns.model.Alarm;
 import com.eulyoung.sns.model.User;
 import com.eulyoung.sns.model.entity.UserEntity;
 import com.eulyoung.sns.repository.AlarmEntityRepository;
+import com.eulyoung.sns.repository.UserCacheRepository;
 import com.eulyoung.sns.repository.UserEntityRepository;
 import com.eulyoung.sns.util.JwtTokenUtils;
 import java.util.Optional;
@@ -20,22 +21,24 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class UserService  {
+public class UserService {
 
     private final UserEntityRepository userEntityRepository;
     private final AlarmEntityRepository alarmEntityRepository;
     private final BCryptPasswordEncoder encoder;
+    private final UserCacheRepository userCacheRepository;
 
     @Value("${jwt.secret-key}")
-    private String key;
+    private String secretKey;
 
     @Value("${jwt.token.expired-time-ms}")
     private long expiredTimeMs;
 
     public User loadUserByUserName(String username) {
-        return userEntityRepository.findByUserName(username).map(User::fromEntity).orElseThrow(() ->
-                new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not found", username)));
-
+        return userCacheRepository.getUser(username).orElseGet(() ->
+                userEntityRepository.findByUserName(username).map(User::fromEntity).orElseThrow(() ->
+                        new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not found", username)))
+        );
     }
 
     @Transactional
@@ -54,20 +57,21 @@ public class UserService  {
     // TODO : implement
     public String login(String userName, String password) {
         //회원가입 여부 체크
-        UserEntity userEntity = userEntityRepository.findByUserName(userName).orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String .format("%s not found", userName)));
+        User user = loadUserByUserName(userName);
+        userCacheRepository.setUser(user);
 
         //비밀번호 체크
-        if (!encoder.matches(password, userEntity.getPassword())) {
+        if (!encoder.matches(password, user.getPassword())) {
             throw new SnsApplicationException(ErrorCode.INVALID_PASSWORD);
         }
 
         // 토큰 생성
-        return JwtTokenUtils.generateToken(userName, key, expiredTimeMs);
+        return JwtTokenUtils.generateToken(userName, secretKey, expiredTimeMs);
     }
 
     // alarm return
-    public Page<Alarm> alarmList(String userName, Pageable pageable) {
-        UserEntity userEntity = userEntityRepository.findByUserName(userName).orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String .format("%s not found", userName)));
-        return alarmEntityRepository.findAllByUser(userEntity, pageable).map(Alarm::fromEntity);
+    public Page<Alarm> alarmList(Integer userId, Pageable pageable) {
+
+        return alarmEntityRepository.findAllByUserId(userId, pageable).map(Alarm::fromEntity);
     }
 }

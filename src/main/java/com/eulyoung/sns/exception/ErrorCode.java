@@ -16,6 +16,7 @@ public enum ErrorCode {
     INVALID_PERMISSION(HttpStatus.UNAUTHORIZED, "Permission is invalid"),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error"),
     ALREADY_LIKED(HttpStatus.CONFLICT, "User already liked the post"),
+    ALARM_CONNECT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "connecting alarm error"),
     ;
 
     private HttpStatus status;
